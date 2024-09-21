@@ -5,7 +5,7 @@ import { trimInline } from "../util/markdown";
  * Override default MarkdownSerializerState to:
  * - handle commonmark delimiters (https://spec.commonmark.org/0.29/#left-flanking-delimiter-run)
  */
-export default class MarkdownSerializerState extends BaseMarkdownSerializerState {
+export class MarkdownSerializerState extends BaseMarkdownSerializerState {
     inTable = false;
 
     constructor(nodes, marks, options) {
