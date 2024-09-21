@@ -1,13 +1,11 @@
 import { MarkdownSerializerState as BaseMarkdownSerializerState } from "prosemirror-markdown";
 import { trimInline } from "../util/markdown";
 
-
 /**
  * Override default MarkdownSerializerState to:
  * - handle commonmark delimiters (https://spec.commonmark.org/0.29/#left-flanking-delimiter-run)
  */
-export class MarkdownSerializerState extends BaseMarkdownSerializerState {
-
+export default class MarkdownSerializerState extends BaseMarkdownSerializerState {
     inTable = false;
 
     constructor(nodes, marks, options) {
@@ -16,19 +14,32 @@ export class MarkdownSerializerState extends BaseMarkdownSerializerState {
     }
 
     render(node, parent, index) {
-        super.render(node, parent, index);
-        const top = this.inlines[this.inlines.length - 1];
-        if(top?.start && top?.end) {
-            const { delimiter, start, end } = this.normalizeInline(top);
-            this.out = trimInline(this.out, delimiter, start, end);
-            this.inlines.pop();
+        if (node.type.name === "paragraph" && node.content.size === 0) {
+            this.out += "<p></p>";
+        } else {
+            super.render(node, parent, index);
+            const top = this.inlines[this.inlines.length - 1];
+            if (top?.start && top?.end) {
+                const { delimiter, start, end } = this.normalizeInline(top);
+                this.out = trimInline(this.out, delimiter, start, end);
+                this.inlines.pop();
+            }
         }
     }
 
+    renderContent(fragment) {
+        fragment.forEach((node, _, i) => {
+            if (i && node.type.name === "paragraph") {
+                this.out += "\n";
+            }
+            this.render(node);
+        });
+    }
+
     markString(mark, open, parent, index) {
-        const info = this.marks[mark.type.name]
-        if(info.expelEnclosingWhitespace) {
-            if(open) {
+        const info = this.marks[mark.type.name];
+        if (info.expelEnclosingWhitespace) {
+            if (open) {
                 this.inlines.push({
                     start: this.out.length,
                     delimiter: info.open,
@@ -46,12 +57,12 @@ export class MarkdownSerializerState extends BaseMarkdownSerializerState {
 
     normalizeInline(inline) {
         let { start, end } = inline;
-        while(this.out.charAt(start).match(/\s/)) {
+        while (this.out.charAt(start).match(/\s/)) {
             start++;
         }
         return {
             ...inline,
             start,
-        }
+        };
     }
 }

@@ -107,7 +107,7 @@ export class MarkdownParser {
         const withoutNewLine = (renderer) => (...args) => {
             const rendered = renderer(...args);
             if(rendered === '\n') {
-                return rendered; // keep soft breaks
+                return '<p></p>'; // keep soft breaks
             }
             if(rendered[rendered.length - 1] === '\n') {
                 return rendered.slice(0, -1);
